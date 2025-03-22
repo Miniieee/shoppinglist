@@ -14,25 +14,40 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// Model for a todo item.
+class Todo {
+  final String title;
+  bool isDone;
+
+  Todo({required this.title, this.isDone = false});
+}
+
 class TodoListPage extends StatefulWidget {
   @override
   _TodoListPageState createState() => _TodoListPageState();
 }
 
 class _TodoListPageState extends State<TodoListPage> {
-  // List of todo items as strings
-  List<String> todos = [
-    'Buy groceries',
-    'Clean the house',
-    'Finish homework',
-    'Call mom',
+  List<Todo> todos = [
+    Todo(title: 'Buy groceries'),
+    Todo(title: 'Clean the house'),
+    Todo(title: 'Finish homework'),
+    Todo(title: 'Call mom'),
   ];
 
-  void _moveToBottom(int index) {
+  void _toggleTodo(int index) {
     setState(() {
-      // Remove the item from its current position and add it to the end of the list
-      final String item = todos.removeAt(index);
-      todos.add(item);
+      if (!todos[index].isDone) {
+        // Mark as done, add strike-through, and move to bottom.
+        todos[index].isDone = true;
+        final todo = todos.removeAt(index);
+        todos.add(todo);
+      } else {
+        // Remove strike-through and move back to the top.
+        todos[index].isDone = false;
+        final todo = todos.removeAt(index);
+        todos.insert(0, todo);
+      }
     });
   }
 
@@ -43,9 +58,18 @@ class _TodoListPageState extends State<TodoListPage> {
       body: ListView.builder(
         itemCount: todos.length,
         itemBuilder: (context, index) {
+          final todo = todos[index];
           return ListTile(
-            title: Text(todos[index]),
-            onTap: () => _moveToBottom(index),
+            title: Text(
+              todo.title,
+              style: TextStyle(
+                decoration:
+                    todo.isDone
+                        ? TextDecoration.lineThrough
+                        : TextDecoration.none,
+              ),
+            ),
+            onTap: () => _toggleTodo(index),
           );
         },
       ),
