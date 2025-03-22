@@ -14,9 +14,9 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// Model for a shopping item.
+// Model for a shopping item. Note: title is now mutable.
 class ShoppingItem {
-  final String title;
+  String title;
   bool isBought;
 
   ShoppingItem({required this.title, this.isBought = false, this.id = 0});
@@ -32,29 +32,23 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
   // Category lists.
   List<ShoppingItem> bakeryItems = [
     ShoppingItem(title: 'Bread', isBought: false, id: 1),
-    ShoppingItem(title: 'Bagels', isBought: false, id: 2),
-    ShoppingItem(title: 'Muffins', isBought: false, id: 3),
-    ShoppingItem(title: 'Croissants', isBought: false, id: 4),
-    ShoppingItem(title: 'Baguette', isBought: false, id: 5),
+    ShoppingItem(title: 'Croissant', isBought: false, id: 2),
+    ShoppingItem(title: 'Bagel', isBought: false, id: 3),
   ];
 
   List<ShoppingItem> dairyItems = [
-    ShoppingItem(title: 'Milk', isBought: false, id: 6),
-    ShoppingItem(title: 'Cheese', isBought: false, id: 7),
-    ShoppingItem(title: 'Yogurt', isBought: false, id: 8),
-    ShoppingItem(title: 'Butter', isBought: false, id: 9),
-    ShoppingItem(title: 'Cream', isBought: false, id: 10),
+    ShoppingItem(title: 'Milk', isBought: false, id: 4),
+    ShoppingItem(title: 'Cheese', isBought: false, id: 5),
+    ShoppingItem(title: 'Yogurt', isBought: false, id: 6),
   ];
 
   List<ShoppingItem> snacksItems = [
-    ShoppingItem(title: 'Chips', isBought: false, id: 11),
-    ShoppingItem(title: 'Cookies', isBought: false, id: 12),
-    ShoppingItem(title: 'Candy', isBought: false, id: 13),
-    ShoppingItem(title: 'Nuts', isBought: false, id: 14),
-    ShoppingItem(title: 'Granola Bars', isBought: false, id: 15),
+    ShoppingItem(title: 'Chips', isBought: false, id: 7),
+    ShoppingItem(title: 'Cookies', isBought: false, id: 8),
+    ShoppingItem(title: 'Candy', isBought: false, id: 9),
   ];
 
-  // Toggle the item's status and reposition it within its category.
+  // Toggle the item's bought status and reposition it within its category.
   void _toggleItem(List<ShoppingItem> items, int index) {
     setState(() {
       if (!items[index].isBought) {
@@ -71,7 +65,40 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
     });
   }
 
-  // Build a section for a given category.
+  // Open a dialog to edit the item's title.
+  void _editItem(List<ShoppingItem> items, int index) {
+    final controller = TextEditingController(text: items[index].title);
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Edit Item"),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(hintText: "Enter new title"),
+          ),
+          actions: [
+            TextButton(
+              child: const Text("Cancel"),
+              onPressed: () => Navigator.pop(context),
+            ),
+            TextButton(
+              child: const Text("Save"),
+              onPressed: () {
+                setState(() {
+                  items[index].title = controller.text;
+                });
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Build a category section with a header and list items.
   Widget _buildCategorySection(String categoryName, List<ShoppingItem> items) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -84,7 +111,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
         ),
-        // List of items in this category.
+        // List of items for this category.
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -101,11 +128,17 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                           : TextDecoration.none,
                 ),
               ),
+              // Tapping the ListTile toggles the item's bought state.
               onTap: () => _toggleItem(items, index),
+              // Pencil icon for editing.
+              trailing: IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () => _editItem(items, index),
+              ),
             );
           },
         ),
-        const Divider(), // Optional divider between sections.
+        const Divider(),
       ],
     );
   }
