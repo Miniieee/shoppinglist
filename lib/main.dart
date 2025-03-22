@@ -14,23 +14,39 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class TodoListPage extends StatelessWidget {
+class TodoListPage extends StatefulWidget {
+  @override
+  _TodoListPageState createState() => _TodoListPageState();
+}
+
+class _TodoListPageState extends State<TodoListPage> {
   // List of todo items as strings
-  final List<String> todos = [
+  List<String> todos = [
     'Buy groceries',
     'Clean the house',
     'Finish homework',
     'Call mom',
   ];
 
+  void _moveToBottom(int index) {
+    setState(() {
+      // Remove the item from its current position and add it to the end of the list
+      final String item = todos.removeAt(index);
+      todos.add(item);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Todo List')),
+      appBar: AppBar(title: const Text('Todo List')),
       body: ListView.builder(
         itemCount: todos.length,
         itemBuilder: (context, index) {
-          return ListTile(title: Text(todos[index]));
+          return ListTile(
+            title: Text(todos[index]),
+            onTap: () => _moveToBottom(index),
+          );
         },
       ),
     );
