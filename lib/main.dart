@@ -18,9 +18,9 @@ class MyApp extends StatelessWidget {
 class ShoppingItem {
   String title;
   bool isBought;
+  int id;
 
   ShoppingItem({required this.title, this.isBought = false, this.id = 0});
-  int id;
 }
 
 class ShoppingListPage extends StatefulWidget {
@@ -29,6 +29,11 @@ class ShoppingListPage extends StatefulWidget {
 }
 
 class _ShoppingListPageState extends State<ShoppingListPage> {
+  // Mutable category names.
+  String bakeryCategoryName = 'Bakery';
+  String dairyCategoryName = 'Dairy';
+  String snacksCategoryName = 'Snacks';
+
   // Category lists.
   List<ShoppingItem> bakeryItems = [
     ShoppingItem(title: 'Bread', isBought: false, id: 1),
@@ -52,12 +57,10 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
   void _toggleItem(List<ShoppingItem> items, int index) {
     setState(() {
       if (!items[index].isBought) {
-        // Mark as bought, add strike-through, and move to bottom.
         items[index].isBought = true;
         final item = items.removeAt(index);
         items.add(item);
       } else {
-        // Mark as not bought, remove strike-through, and move to top.
         items[index].isBought = false;
         final item = items.removeAt(index);
         items.insert(0, item);
@@ -98,17 +101,68 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
     );
   }
 
-  // Build a category section with a header and list items.
-  Widget _buildCategorySection(String categoryName, List<ShoppingItem> items) {
+  // Open a dialog to edit a category name.
+  void _editCategory(String currentName, Function(String) onUpdate) {
+    final controller = TextEditingController(text: currentName);
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Edit Category"),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(
+              hintText: "Enter new category name",
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: const Text("Cancel"),
+              onPressed: () => Navigator.pop(context),
+            ),
+            TextButton(
+              child: const Text("Save"),
+              onPressed: () {
+                setState(() {
+                  onUpdate(controller.text);
+                });
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Build a category section with a header (with edit icon) and list items.
+  Widget _buildCategorySection(
+    String categoryName,
+    List<ShoppingItem> items,
+    Function(String) onUpdateCategory,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Category header.
+        // Category header with an edit icon.
         Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Text(
-            categoryName,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                categoryName,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () => _editCategory(categoryName, onUpdateCategory),
+              ),
+            ],
           ),
         ),
         // List of items for this category.
@@ -130,7 +184,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
               ),
               // Tapping the ListTile toggles the item's bought state.
               onTap: () => _toggleItem(items, index),
-              // Pencil icon for editing.
+              // Pencil icon for editing the item.
               trailing: IconButton(
                 icon: const Icon(Icons.edit),
                 onPressed: () => _editItem(items, index),
@@ -150,9 +204,15 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            _buildCategorySection('Bakery', bakeryItems),
-            _buildCategorySection('Dairy', dairyItems),
-            _buildCategorySection('Snacks', snacksItems),
+            _buildCategorySection(bakeryCategoryName, bakeryItems, (newName) {
+              bakeryCategoryName = newName;
+            }),
+            _buildCategorySection(dairyCategoryName, dairyItems, (newName) {
+              dairyCategoryName = newName;
+            }),
+            _buildCategorySection(snacksCategoryName, snacksItems, (newName) {
+              snacksCategoryName = newName;
+            }),
           ],
         ),
       ),
